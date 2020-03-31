@@ -112,37 +112,37 @@ print(train[0][0])
 sdm = SDM(784, 50000, 350)
 c = 0
 point = 1000
-# for x in train[0]:
-#     print(c)
-#     print_num(x)
-#
-#     sdm.write(x.reshape(784).astype(np.int8))
-#     if c > point:
-#         break
-#     else:
-#         c += 1
+for x in train[0]:
+    print(c)
+    print_num(x)
 
-# for t in train[0][point:point + 100]:
-#     print('IN')
-#     print_num(t)
-#     n = sdm.read(t.reshape(784).astype(np.int8))
-#     # print('1')
-#     print_num(n.reshape(28, 28))
-#     n = sdm.read(n.reshape(784).astype(np.int8))
-#     # print('2')
-#     print_num(n.reshape(28, 28))
-#     n = sdm.read(n.reshape(784).astype(np.int8))
-#     # print('3')
-#     print_num(n.reshape(28, 28))
-#     n = sdm.read(n.reshape(784).astype(np.int8))
-#     # print('4')
-#     print_num(n.reshape(28, 28))
-#     n = sdm.read(n.reshape(784).astype(np.int8))
-#     # print('5')
-#     print_num(n.reshape(28, 28))
-#     n = sdm.read(n.reshape(784).astype(np.int8))
-#     # print('6')
-#     print_num(n.reshape(28, 28))
-#
-#     print('OUT')
-#     print_num(n.reshape(28, 28))
+    sdm.write(x.reshape(784).astype(np.int8))
+    if c > point:
+        break
+    else:
+        c += 1
+
+for t in train[0][point:point + 100]:
+    print('IN')
+    print_num(t)
+    n = sdm.read(t.reshape(784).astype(np.int8))
+    # print('1')
+    print_num(n.reshape(28, 28))
+    n = sdm.read(n.reshape(784).astype(np.int8))
+    # print('2')
+    print_num(n.reshape(28, 28))
+    n = sdm.read(n.reshape(784).astype(np.int8))
+    # print('3')
+    print_num(n.reshape(28, 28))
+    n = sdm.read(n.reshape(784).astype(np.int8))
+    # print('4')
+    print_num(n.reshape(28, 28))
+    n = sdm.read(n.reshape(784).astype(np.int8))
+    # print('5')
+    print_num(n.reshape(28, 28))
+    n = sdm.read(n.reshape(784).astype(np.int8))
+    # print('6')
+    print_num(n.reshape(28, 28))
+
+    print('OUT')
+    print_num(n.reshape(28, 28))
