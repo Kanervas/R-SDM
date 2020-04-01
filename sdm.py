@@ -1,15 +1,6 @@
-import random
-import json
 import tensorflow as tf
-import tensorflow.keras.layers as layers
 import numpy as np
 import itertools as it
-import os
-
-from keras.layers import Flatten
-from tensorflow_core.python.keras.layers import Dense
-
-os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 
 
 def format_num(data):
@@ -51,98 +42,65 @@ def binarize(l: np.ndarray):
 
 
 class SDM:
-    def __init__(self, n, l, d):
+    def __init__(self, n, num_locations, max_distance):
+        """
+        :param n: Dimension of the memory
+        :param num_locations: Number of locations to store registers
+        :param max_distance: Given an n-dimensional cue, defines the radius within which a set of locations activate
+        """
         self.n = n
-        self.l = l
-        self.d = d
+        self.num_locations = num_locations
+        self.max_distance = max_distance
 
-        # Place l n-dimensional locations uniformally throughout the space
-        self.places = np.random.randint(2, size=(l, n))
-        self.registers = np.zeros((l, n), dtype=np.int8)
+        # Uniformly distribute registers across the n-dimensional memory space
+        self.locations = np.random.randint(2, size=(num_locations, n))
+        self.registers = np.zeros((num_locations, n), dtype=np.int8)
 
-    def hamming_distance(self, v1, v2):
-        return np.count_nonzero(v1 != v2)
+    def read(self, cue):
+        # Activate the locations that are within self.max_distance of the cue
+        on = np.count_nonzero(cue != self.locations, axis=1) <= self.max_distance
 
-    def read(self, m):
-        on = np.count_nonzero(m != self.places, axis=1) <= self.d
-        # print('read-on', m, on)
-        # print('regs-on', self.registers[on])
-        # print('read-sum', m, np.sum(self.registers[on], axis=0))
+        # Define the output register
         out = np.zeros(self.n, dtype=np.int32)
+
+        # Sum the registers corresponding to active locations into the output register
         np.sum(self.registers[on], out=out, axis=0)
-        # print('read-out', out)
 
         return out
 
-    def write(self, m):
-        on = np.count_nonzero(m != self.places, axis=1) <= self.d
-        # print('write-on', m, on)
-        m[m == 0] = -1
-        self.registers[on] += m
-        # print('write-regs', m, self.registers)
+    def write(self, cue):
+        # Activate the locations that are within self.max_distance of the cue
+        on = np.count_nonzero(cue != self.locations, axis=1) <= self.max_distance
 
+        # Set the cue's off bits to -1
+        cue[cue == 0] = -1
 
-def to_num(arr):
-    s = 0
-    for i in range(len(arr)):
-        if arr[i] > 0:
-            s += 2 ** i
-
-    return s
-
-
-def to_arr(n):
-    arr = np.zeros(784, dtype=np.int8)
-    for i in range(784):
-        if n % 2 ** i == 0:
-            arr[i] = 1
-
-    return arr
+        # Edit the registers to store the new memory
+        self.registers[on] += cue
 
 
 mnist = tf.keras.datasets.mnist
 
 train, test = mnist.load_data()
-print(train)
-
 train = (np.array([binarize(x) for x in train[0]]), train[1])
-print(len(train), len(test))
-print(train[0][0])
 
 sdm = SDM(784, 50000, 350)
-c = 0
 point = 1000
-for x in train[0]:
-    print(c)
+train_x, train_y = train
+
+# Train
+for i in range(point):
+    x = train_x[i]
+    print(i)
     print_num(x)
-
     sdm.write(x.reshape(784).astype(np.int8))
-    if c > point:
-        break
-    else:
-        c += 1
 
-for t in train[0][point:point + 100]:
+# Test
+for i in range(point, point + 100):
+    x = train_x[i]
     print('IN')
-    print_num(t)
-    n = sdm.read(t.reshape(784).astype(np.int8))
-    # print('1')
-    print_num(n.reshape(28, 28))
-    n = sdm.read(n.reshape(784).astype(np.int8))
-    # print('2')
-    print_num(n.reshape(28, 28))
-    n = sdm.read(n.reshape(784).astype(np.int8))
-    # print('3')
-    print_num(n.reshape(28, 28))
-    n = sdm.read(n.reshape(784).astype(np.int8))
-    # print('4')
-    print_num(n.reshape(28, 28))
-    n = sdm.read(n.reshape(784).astype(np.int8))
-    # print('5')
-    print_num(n.reshape(28, 28))
-    n = sdm.read(n.reshape(784).astype(np.int8))
-    # print('6')
-    print_num(n.reshape(28, 28))
+    print_num(x)
+    n = sdm.read(x.reshape(784).astype(np.int8))
 
     print('OUT')
     print_num(n.reshape(28, 28))
